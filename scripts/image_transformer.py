@@ -7,7 +7,7 @@ import numpy as np
 
 class OGImage:
 
-    def __init__(self, angle, res, path, sku, image=None):
+    def __init__(self, angle, res, path, sku):
         self.res = res
         self.angle = angle
         self.path = path
