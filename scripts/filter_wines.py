@@ -1,4 +1,5 @@
 import csv
+import json
 from datetime import date
 from typing import List, Dict
 
@@ -221,11 +222,29 @@ def filter_structure(
     for country in countries_updated.values():
         country.drop_regions_below(region_min_count)
 
-    return countries
+    return countries_updated
 
 
 if __name__ == '__main__':
     wine_list = read_feed()
     countries_hierarchical = compute_hierarchy(wine_list)
     dropped = filter_structure(countries_hierarchical)
-    print(dropped)
+
+
+    def default_encode(obj):
+        if isinstance(obj, (Country, Region, Winery)):
+            wines = obj.count_wines()
+            res = vars(obj)
+            res['wine_count'] = wines
+
+            if isinstance(obj, Country):
+                res['region_count'] = len(obj.regions)
+            elif isinstance(obj, Region):
+                res['winery_count'] = len(obj.wineries)
+
+            return res
+        elif isinstance(obj, Wine):
+            return vars(obj)
+
+    with open('../feeds/embedding_feed.json', 'w') as output_file:
+        json.dump(dropped, output_file, indent=4, sort_keys=True, default=default_encode)
