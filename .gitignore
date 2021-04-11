@@ -1,6 +1,9 @@
 .idea/
 DS_STORE
 
+originals/
 feeds/
 wine_images/
 *dump.json
+
+**__pycache__**
