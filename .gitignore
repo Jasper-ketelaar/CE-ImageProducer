@@ -4,6 +4,7 @@ DS_STORE
 venv/
 
 originals/
+transformed/
 feeds/
 wine_images/
 *dump.json
