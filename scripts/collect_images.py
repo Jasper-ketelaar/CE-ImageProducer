@@ -87,8 +87,9 @@ def dump_wine_image(wine: Wine, image_formats=None, image_ext="png"):
 
 if __name__ == '__main__':
     structure = read_json_feed()
-    france = structure['France']
-    for region in france.regions.values():
-        for winery in region.wineries.values():
-            for wine in winery.wines.values():
-                dump_wine_image(wine)
+    for country in structure.values():
+        for region in country.regions.values():
+            for winery in region.wineries.values():
+                for wine in winery.wines.values():
+                    dump_wine_image(wine)
+

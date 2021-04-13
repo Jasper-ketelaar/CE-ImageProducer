@@ -17,7 +17,7 @@ class OGImage:
     def load_as_cv2(self):
         self.image = cv2.imread(self.path)
 
-    def rescale_to_target(self, target=450, keep_instance=True):
+    def rescale_to_target(self, target=448, keep_instance=True):
         resized = cv2.resize(
             self.image,
             (target, target),
@@ -31,7 +31,7 @@ class OGImage:
             og_alt = OGImage(self.angle, self.res, self.path, self.sku)
             og_alt.image = resized
 
-    def show(self, *args, operation: Union[*Callable[[*Any], np.int8], None] = None):
+    def show(self, *args, operation: Union[Callable[[Any], np.int8], None] = None):
         image = self.image
         if operation is not None:
             image = operation(*args)
@@ -83,8 +83,10 @@ def load_image_dict(og_dir='../originals') -> Dict[str, List[OGImage]]:
 
 if __name__ == '__main__':
     images: Dict[str, List[OGImage]] = load_image_dict()
-    arna_imgs: List[OGImage] = images['ASTR-17005']
-    for arna in arna_imgs:
-        arna.load_as_cv2()
-        arna.rescale_to_target()
-        arna.show(operation=(arna.smoothen, arna.salt_pepper))
+    for sku in images:
+        image_list = images[sku]
+        for arna in image_list:
+            arna.load_as_cv2()
+            arna.rescale_to_target()
+            arna.image = arna.sharpen(arna.res / 25)
+            arna.show()
