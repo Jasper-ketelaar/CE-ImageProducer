@@ -164,9 +164,7 @@ Apart from the reproduced results we would like to conclude with a remark about 
 ## References
 - \[1\]: Ankit Dhall, Anastasia Makarova, Octavian Ganea, Dario Pavllo, Michael Greeff, & Andreas Krause (2020). Hierarchical Image Classification using Entailment Cone Embedding. 
 
-- \[2\]: A. Dhall (2019), Eth entomological collection (ethec) dataset  https://www.researchcollection.ethz.ch/handle/20.500.11850/365379 .
-
-- \[3\]: A. Dhall (2019). Learning Representations For Images With Hierarchical Labels.
+- \[2\]: A. Dhall (2019), Eth entomological collection (ethec) dataset  https://www.researchcollection.ethz.ch/handle/20.500.11850/365379 
 
 ## Work Division
 
