@@ -7,12 +7,12 @@ import torchvision
 from torchvision import datasets, models, transforms
 
 import os
-from experiment import Experiment, WeightedResampler
-from evaluation import MultiLabelEvaluation, Evaluation, MultiLabelEvaluationSingleThresh, MultiLevelEvaluation
-from finetuner import CIFAR10
+from network.experiment import Experiment, WeightedResampler
+from network.evaluation import MultiLabelEvaluation, Evaluation, MultiLabelEvaluationSingleThresh, MultiLevelEvaluation
+from network.finetuner import CIFAR10
 
 from data.db import ETHECLabelMap, ETHECDB, ETHECDBMerged, ETHECLabelMapMerged, ETHECLabelMapMergedSmall, ETHECDBMergedSmall
-from loss import MultiLevelCELoss, MultiLabelSMLoss, LastLevelCELoss, MaskedCELoss, HierarchicalSoftmaxLoss
+from network.loss import MultiLevelCELoss, MultiLabelSMLoss, LastLevelCELoss, MaskedCELoss, HierarchicalSoftmaxLoss
 
 from PIL import Image
 import numpy as np
@@ -208,7 +208,7 @@ class ETHECExperiment(CIFAR10):
                  load_wt=False,
                  model_name=None,
                  optimizer_method='adam',
-                 use_grayscale=False):
+                 use_grayscale=True):
 
         CIFAR10.__init__(self, data_loaders, labelmap, criterion, lr, batch_size, evaluator, experiment_name,
                          experiment_dir, n_epochs, eval_interval, feature_extracting, use_pretrained,
@@ -294,24 +294,24 @@ def ETHEC_train_model(arguments):
                            path_to_images=arguments.image_dir,
                            labelmap=labelmap, transform=val_test_data_transforms)
     elif not arguments.debug:
-        train_set = ETHECDBMerged(path_to_json='../database/ETHEC/formatted_train.json',
+        train_set = ETHECDBMerged(path_to_json='../database/ETHEC/train.json',
                                   path_to_images=arguments.image_dir,
                                   labelmap=labelmap, transform=train_data_transforms)
-        val_set = ETHECDBMerged(path_to_json='../database/ETHEC/formatted_val.json',
+        val_set = ETHECDBMerged(path_to_json='../database/ETHEC/val.json',
                                 path_to_images=arguments.image_dir,
                                 labelmap=labelmap, transform=val_test_data_transforms)
-        test_set = ETHECDBMerged(path_to_json='../database/ETHEC/formatted_test.json',
+        test_set = ETHECDBMerged(path_to_json='../database/ETHEC/test.json',
                                  path_to_images=arguments.image_dir,
                                  labelmap=labelmap, transform=val_test_data_transforms)
     else:
         labelmap = ETHECLabelMapMergedSmall(single_level=False)
-        train_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/formatted_train.json',
+        train_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/train.json',
                                        path_to_images=arguments.image_dir,
                                        labelmap=labelmap, transform=train_data_transforms)
-        val_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/formatted_val.json',
+        val_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/val.json',
                                      path_to_images=arguments.image_dir,
                                      labelmap=labelmap, transform=val_test_data_transforms)
-        test_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/formatted_test.json',
+        test_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/test.json',
                                       path_to_images=arguments.image_dir,
                                       labelmap=labelmap, transform=val_test_data_transforms)
 
@@ -344,16 +344,13 @@ def ETHEC_train_model(arguments):
         trainloader = torch.utils.data.DataLoader(train_set,
                                                   batch_size=batch_size,
                                                   num_workers=n_workers,
-                                                  pin_memory=True,
                                                   shuffle=True if arguments.class_weights else False,
                                                   sampler=None if arguments.class_weights else WeightedResampler(
                                                       train_set, weight_strategy=arguments.weight_strategy))
         valloader = torch.utils.data.DataLoader(val_set,
                                                 batch_size=batch_size,
-                                                pin_memory=True,
                                                 shuffle=False, num_workers=n_workers)
         testloader = torch.utils.data.DataLoader(test_set,
-                                                 pin_memory=True,
                                                  batch_size=batch_size,
                                                  shuffle=False, num_workers=n_workers)
 
@@ -432,8 +429,8 @@ def ETHEC_train_model(arguments):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", help='Use DEBUG mode.', action='store_true')
-    parser.add_argument("--lr", help='Input learning rate.', type=float, default=0.00001)
-    parser.add_argument("--batch_size", help='Batch size.', type=int, default=32)
+    parser.add_argument("--lr", help='Input learning rate.', type=float, default=0.001)
+    parser.add_argument("--batch_size", help='Batch size.', type=int, default=4)
     parser.add_argument("--evaluator", help='Evaluator type.', type=str, default='ML')
     parser.add_argument("--experiment_name", help='Experiment name.', type=str, required=True)
     parser.add_argument("--experiment_dir", help='Experiment directory.', type=str, required=True)

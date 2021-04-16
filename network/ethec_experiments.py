@@ -1,28 +1,32 @@
-from __future__ import division
 from __future__ import print_function
-
-import argparse
-import copy
-import json
-import os
-import time
-
-import git
-import matplotlib
-import numpy as np
+from __future__ import division
 import torch
 import torch.nn as nn
-from data.db import ETHECLabelMap, ETHECDB, ETHECDBMerged, ETHECLabelMapMerged, ETHECLabelMapMergedSmall, \
-    ETHECDBMergedSmall
-from evaluation import MultiLabelEvaluation, MultiLabelEvaluationSingleThresh, MultiLevelEvaluation
-from experiment import Experiment, WeightedResampler
-from finetuner import CIFAR10
-from loss import MultiLevelCELoss, MultiLabelSMLoss, LastLevelCELoss, MaskedCELoss, HierarchicalSoftmaxLoss
-from torchvision import models, transforms
+import torch.optim as optim
+import torchvision
+from torchvision import datasets, models, transforms
+
+import os
+from network.experiment import Experiment, WeightedResampler
+from network.evaluation import MultiLabelEvaluation, Evaluation, MultiLabelEvaluationSingleThresh, MultiLevelEvaluation
+from network.finetuner import CIFAR10
+
+from data.db import ETHECLabelMap, ETHECDB, ETHECDBMerged, ETHECLabelMapMerged, ETHECLabelMapMergedSmall, ETHECDBMergedSmall
+from network.loss import MultiLevelCELoss, MultiLabelSMLoss, LastLevelCELoss, MaskedCELoss, HierarchicalSoftmaxLoss
+
+from PIL import Image
+import numpy as np
+
+import copy
+import argparse
+import json
+import git
+import time
+
+import matplotlib
 
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
-
 
 class CNN2DFeat(torch.nn.Module):
     def __init__(self, original_model, labelmap):
@@ -31,6 +35,7 @@ class CNN2DFeat(torch.nn.Module):
         self.labelmap = labelmap
         num_features = self.original_model.fc.in_features
         self.original_model.fc = nn.Linear(num_features, 2, bias=False)
+
         self.final_linears = nn.ModuleList([nn.Linear(2, level, bias=False) for level in self.labelmap.levels])
 
     def forward(self, x):
@@ -137,8 +142,7 @@ class ETHEC2D(CIFAR10):
         return self.model
 
     def load_model(self, epoch_to_load):
-        checkpoint = torch.load(os.path.join(self.path_to_save_model, '{}.pth'.format(epoch_to_load)),
-                                map_location=self.device)
+        checkpoint = torch.load(os.path.join(self.path_to_save_model, '{}.pth'.format(epoch_to_load)), map_location=self.device)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.model = self.model.to(self.device)
         self.epoch = checkpoint['epoch']
@@ -163,15 +167,13 @@ class ETHEC2D(CIFAR10):
                 embeddings_x[emb_id] = weights[label_ix][0]
                 embeddings_y[emb_id] = weights[label_ix][1]
                 annotation[emb_id] = '{}'.format(getattr(self.labelmap,
-                                                         '{}_ix_to_str'.format(self.labelmap.level_names[level_id]))[
-                                                     label_ix]
+                                                         '{}_ix_to_str'.format(self.labelmap.level_names[level_id]))[label_ix]
                                                  )
                 color_list[emb_id] = colors[level_id]
 
-                if level_id < len(self.labelmap.levels) - 1:
-                    connected_to[emb_id] = \
-                        getattr(self.labelmap, 'child_of_{}_ix'.format(self.labelmap.level_names[level_id]))[label_ix]
-                    connected_to[emb_id] = [i + self.labelmap.level_start[level_id + 1] for i in connected_to[emb_id]]
+                if level_id < len(self.labelmap.levels)-1:
+                    connected_to[emb_id] = getattr(self.labelmap, 'child_of_{}_ix'.format(self.labelmap.level_names[level_id]))[label_ix]
+                    connected_to[emb_id] = [i+self.labelmap.level_start[level_id+1] for i in connected_to[emb_id]]
 
                 ax.scatter(weights[label_ix][0], weights[label_ix][1], c=colors[level_id], alpha=1)
                 # ax.annotate(annotation[emb_id], (weights[label_ix][0], weights[label_ix][1]))
@@ -179,12 +181,10 @@ class ETHEC2D(CIFAR10):
         for from_node in connected_to:
             for to_node in connected_to[from_node]:
                 if to_node in embeddings_x:
-                    plt.plot([embeddings_x[from_node], embeddings_x[to_node]],
-                             [embeddings_y[from_node], embeddings_y[to_node]],
+                    plt.plot([embeddings_x[from_node], embeddings_x[to_node]], [embeddings_y[from_node], embeddings_y[to_node]],
                              'b-', alpha=0.2)
 
-        emb_info = {'x': embeddings_x, 'y': embeddings_y, 'annotation': annotation, 'color': color_list,
-                    'connected_to': connected_to}
+        emb_info = {'x': embeddings_x, 'y': embeddings_y, 'annotation': annotation, 'color': color_list, 'connected_to': connected_to}
         np.save(os.path.join(self.log_dir, '{0:04d}_embedding_info.npy'.format(self.epoch)), emb_info)
 
         # if self.title_text:
@@ -194,7 +194,6 @@ class ETHEC2D(CIFAR10):
         fig.savefig(os.path.join(self.log_dir, '{0:04d}_embedding.pdf'.format(self.epoch)), dpi=200)
         fig.savefig(os.path.join(self.log_dir, '{0:04d}_embedding.png'.format(self.epoch)), dpi=200)
         print('Successfully saved embedding to disk!')
-
 
 class ETHECExperiment(CIFAR10):
     def __init__(self, data_loaders, labelmap, criterion, lr,
@@ -236,18 +235,6 @@ class ETHECExperiment(CIFAR10):
         self.model = nn.DataParallel(self.model)
 
 
-def train_model_bottles(arguments):
-    experiment = os.path.join(arguments.experiment_dir, arguments.experiment_name)
-    if not os.path.exists(experiment):
-        os.makedirs(experiment)
-
-    args_dict = vars(arguments)
-    with open(os.path.join(experiment, 'config_params.txt'), 'w') as file:
-        file.write(json.dumps(vars(arguments), indent=4))
-
-    print(f'Config parameters for this run are:\n{json.dumps(args_dict, indent=4)}')
-
-
 def ETHEC_train_model(arguments):
     if not os.path.exists(os.path.join(arguments.experiment_dir, arguments.experiment_name)):
         os.makedirs(os.path.join(arguments.experiment_dir, arguments.experiment_name))
@@ -282,7 +269,7 @@ def ETHEC_train_model(arguments):
                                                    transforms.ToTensor(),
                                                    # transforms.Normalize(mean=(143.2341, 162.8151, 177.2185),
                                                    #                      std=(66.7762, 59.2524, 51.5077))
-                                                   ])
+                                                  ])
     if arguments.use_grayscale:
         train_data_transforms = transforms.Compose([transforms.ToPILImage(),
                                                     transforms.Grayscale(),
@@ -307,24 +294,24 @@ def ETHEC_train_model(arguments):
                            path_to_images=arguments.image_dir,
                            labelmap=labelmap, transform=val_test_data_transforms)
     elif not arguments.debug:
-        train_set = ETHECDBMerged(path_to_json='../database/ETHEC/formatted_train.json',
+        train_set = ETHECDBMerged(path_to_json='../database/ETHEC/train.json',
                                   path_to_images=arguments.image_dir,
                                   labelmap=labelmap, transform=train_data_transforms)
-        val_set = ETHECDBMerged(path_to_json='../database/ETHEC/formatted_val.json',
+        val_set = ETHECDBMerged(path_to_json='../database/ETHEC/val.json',
                                 path_to_images=arguments.image_dir,
                                 labelmap=labelmap, transform=val_test_data_transforms)
-        test_set = ETHECDBMerged(path_to_json='../database/ETHEC/formatted_test.json',
+        test_set = ETHECDBMerged(path_to_json='../database/ETHEC/test.json',
                                  path_to_images=arguments.image_dir,
                                  labelmap=labelmap, transform=val_test_data_transforms)
     else:
         labelmap = ETHECLabelMapMergedSmall(single_level=False)
-        train_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/formatted_train.json',
+        train_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/train.json',
                                        path_to_images=arguments.image_dir,
                                        labelmap=labelmap, transform=train_data_transforms)
-        val_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/formatted_val.json',
+        val_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/val.json',
                                      path_to_images=arguments.image_dir,
                                      labelmap=labelmap, transform=val_test_data_transforms)
-        test_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/formatted_test.json',
+        test_set = ETHECDBMergedSmall(path_to_json='../database/ETHEC/test.json',
                                       path_to_images=arguments.image_dir,
                                       labelmap=labelmap, transform=val_test_data_transforms)
 
@@ -374,7 +361,7 @@ def ETHEC_train_model(arguments):
         n_train = torch.zeros(labelmap.n_classes)
         for data_item in data_loaders['train']:
             n_train += torch.sum(data_item['labels'], 0)
-        weight = 1.0 / n_train
+        weight = 1.0/n_train
 
     eval_type = MultiLabelEvaluation(os.path.join(arguments.experiment_dir, arguments.experiment_name), labelmap)
     if arguments.evaluator == 'MLST':
@@ -401,19 +388,19 @@ def ETHEC_train_model(arguments):
 
     if arguments.use_2d:
         ETHEC_trainer = ETHEC2D(data_loaders=data_loaders, labelmap=labelmap,
-                                criterion=use_criterion,
-                                lr=arguments.lr,
-                                batch_size=batch_size, evaluator=eval_type,
-                                experiment_name=arguments.experiment_name,  # 'cifar_test_ft_multi',
-                                experiment_dir=arguments.experiment_dir,
-                                eval_interval=arguments.eval_interval,
-                                n_epochs=arguments.n_epochs,
-                                feature_extracting=arguments.freeze_weights,
-                                use_pretrained=True,
-                                load_wt=arguments.resume,
-                                model_name=arguments.model,
-                                optimizer_method=arguments.optimizer_method,
-                                use_grayscale=arguments.use_grayscale)
+                                        criterion=use_criterion,
+                                        lr=arguments.lr,
+                                        batch_size=batch_size, evaluator=eval_type,
+                                        experiment_name=arguments.experiment_name,  # 'cifar_test_ft_multi',
+                                        experiment_dir=arguments.experiment_dir,
+                                        eval_interval=arguments.eval_interval,
+                                        n_epochs=arguments.n_epochs,
+                                        feature_extracting=arguments.freeze_weights,
+                                        use_pretrained=True,
+                                        load_wt=arguments.resume,
+                                        model_name=arguments.model,
+                                        optimizer_method=arguments.optimizer_method,
+                                        use_grayscale=arguments.use_grayscale)
     else:
         ETHEC_trainer = ETHECExperiment(data_loaders=data_loaders, labelmap=labelmap,
                                         criterion=use_criterion,
@@ -430,7 +417,7 @@ def ETHEC_train_model(arguments):
                                         optimizer_method=arguments.optimizer_method,
                                         use_grayscale=arguments.use_grayscale)
     ETHEC_trainer.prepare_model()
-    # if arguments.use_2d and arguments.resume:
+    #if arguments.use_2d and arguments.resume:
     #    ETHEC_trainer.plot_label_representations()
     #    return
     if arguments.set_mode == 'train':
@@ -442,8 +429,8 @@ def ETHEC_train_model(arguments):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", help='Use DEBUG mode.', action='store_true')
-    parser.add_argument("--lr", help='Input learning rate.', type=float, default=0.00001)
-    parser.add_argument("--batch_size", help='Batch size.', type=int, default=32)
+    parser.add_argument("--lr", help='Input learning rate.', type=float, default=0.001)
+    parser.add_argument("--batch_size", help='Batch size.', type=int, default=8)
     parser.add_argument("--evaluator", help='Evaluator type.', type=str, default='ML')
     parser.add_argument("--experiment_name", help='Experiment name.', type=str, required=True)
     parser.add_argument("--experiment_dir", help='Experiment directory.', type=str, required=True)
@@ -457,12 +444,9 @@ if __name__ == '__main__':
     parser.add_argument("--weight_strategy", help='Use inverse freq or inverse sqrt freq. ["inv", "inv_sqrt"]',
                         type=str, default='inv')
     parser.add_argument("--model", help='NN model to use.', type=str, required=True)
-    parser.add_argument("--loss",
-                        help='Loss function to use. [multi_label, multi_level, last_level, masked_loss, hsoftmax]',
-                        type=str, required=True)
+    parser.add_argument("--loss", help='Loss function to use. [multi_label, multi_level, last_level, masked_loss, hsoftmax]', type=str, required=True)
     parser.add_argument("--use_grayscale", help='Use grayscale images.', action='store_true')
-    parser.add_argument("--class_weights", help='Re-weigh the loss function based on inverse class freq.',
-                        action='store_true')
+    parser.add_argument("--class_weights", help='Re-weigh the loss function based on inverse class freq.', action='store_true')
     parser.add_argument("--freeze_weights", help='This flag fine tunes only the last layer.', action='store_true')
     parser.add_argument("--set_mode", help='If use training or testing mode (loads best model).', type=str,
                         required=True)
@@ -470,5 +454,4 @@ if __name__ == '__main__':
     parser.add_argument("--use_2d", help='Use model with 2d features', action='store_true')
     args = parser.parse_args()
 
-    train_model_bottles(args)
     ETHEC_train_model(args)
