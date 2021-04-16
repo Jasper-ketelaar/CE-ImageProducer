@@ -59,20 +59,33 @@ label structure and even within specific regions there are guidelines that the w
 produce recognizable features within their bottles to create a brand and have people be familiar with it. Most people know what a bottle of
 Moët looks like if they are even slightly familiar with wine because their branding has become very popular over the years.
 
-We figured that because these geometries essentially represent a bottle, this could be a very good dataset to work with a geometry based
-model in general and upon encountering the paper we actually realized that this could yield fantastic results as it, in essence but obviously more detail,
-researched the topic and came up with a multitude of models to be used for data such as ours.
+A single bottle of Moët if your interest does not lie in wines: 
+<img src="images/moet.jpg" width="300">
+_Figure 5: A bottle of a popular brand that produces champagnes_
+<br/>
 
-The wine dataset, used to reproduce the results, contains 38893 images with corresponding labels across 4 different levels. 
-Each image is kept of the same dimension (448x448 pixels) as the original ETHEC dataset used in the paper. 
-The split of the data is also maintained the same: train(80%), validation(10%) and test(10%) based solely on the images. 
+Here is a line-up of a few of their bottles to show case what we meant by similarity and hierarchy:
+![Moet Collection](images/moet-collection.jpeg)
+_Figure 6: A collection of these bottles to show how the hierarchy was interpreted_
+
+We figured that because these image based hierarchical attributes should be able to identify a bottle, this could be a very good dataset to work with a geometry based
+model in general. Upon encountering the paper we actually realized that this could yield fantastic results as it, in essence but obviously more detail,
+researched the topic and came up with a multitude of models to be used for data such as ours. We both, individually, picked 3 papers to make sure 
+our preferences were met and this paper instantly ended up in both top 1 for the same reason.
+
+To make the reproduction we knew a lot had to be done for the images of the bottles to make them fit the hierarchy defined
+in the dataset used in the paper, so a lot of our time ended up going in to making sure that these bottles were collected,
+filtered, scaled, transformed in certain ways and ended up creating a similar split sa the paper did.
+
+In the end, our dataset contained 38893 images with corresponding labels across 4 different levels before we could
+start working on the reproduction part of the results. 
+
 Here is the image below describing the information mentioned for each image in the json files:
-
 ![Wine Json example](images/wine_json.PNG)
-_Figure 5: Information for each image in the Json files for the Wine dataset._
+_Figure 7: Information for each image in the Json files for the Wine dataset._
 
 ![ETHEC hierarchy example](images/hierarchy_img.png)
-_Figure 6: Hierarchy of labels from the Wine dataset across 4 levels: country (blue), region (aqua), winery (brown) and wine. For clarity, this visualisation depicts only the first 3 levels. The name of the country is displayed next to its sub-tree. Edges represent direct relations_
+_Figure 8: Hierarchy of labels from the Wine dataset across 4 levels: country (blue), region (aqua), winery (brown) and wine. For clarity, this visualisation depicts only the first 3 levels. The name of the country is displayed next to its sub-tree. Edges represent direct relations_
 
 ## Methodology
 
@@ -85,12 +98,41 @@ Initially, the existing code was used to replicate results reported in the paper
 
 For the wine dataset, some changes were required to the existing code, json files had to be generated for train and test purposes, and image transformations were required to create some noise in the image and to make the dataset comparable in size to the ETHEC dataset used in the paper. Firstly, from the entire wine dataset only those data points were collected were there were images available and the parents in the hierarchy had some minimum number of children. Also, six different angles of wine bottle images were selected. After downloading the images as per the decided criteria, these images were transformed. Originally images were of different size, so these images were scaled up or down to 448x448 pixels, as per requirement. Then, the images were introduced to some gaussian noise and the changes can be seen in the images below:
 
+### Creating the hierarchy
+We needed to then create a hierarchy of the bottles to make sure that underrepresented values were filtered out and that we kept a structure relatively
+similar to the data used in the paper. Once this hierarchy was constructed we dropped from ~1800 entries to ~1300 entries of bottles which we were satisfied with. 
+This generated a json file that was used for the next part.
+
+
+### Collecting the originals
+Since the dataset had pictures of bottles that were taken from 12 different angles and had different resolutions the first step was collecting the originals. This turned out
+to be a little bit more difficult than anticipated as, unbeknownst to us, the images had different resolutions over time (probably due to updates in the camera system). So one
+bottle could have 64, 128, 256, 348, 512 squared resolutions, another could have different resolutions, and we did not figure out a way to tell besides checking the response status code.
+
+There were 12 angles that we could pick but since the label is on the front and the back (generally) and the sides contain little information besides pure bottle shape
+we decided that we could take the 11, 0, 1 angles (so the front including left and right rotated), and the 5, 6, 7 angles with the same reason as the front. This meant that we had 
+~30 images to download per bottle and since our dataset had ~1300 bottles we needed to write better code that could both keep track of what resolution format the bottle had, based on response codes we got,
+whilst asynchronously sending requests. The code for this is in our github.
+
+
+### Transforming the originals
+The originals were most obviously not scaled in the same dimensions so that is the first thing we did. We then tried to figure out a few
+ways to make sure that the geometeries in the bottles were more clear such that the model would perform at its best. We tried to originally 
+add noise generating some salt&pepper values in rgb and overlaying these depending on the resolution of the image. But in doing this process 
+we realized that noise was not really necessary for the bottles as the up/down-scaling to our target dimension
+created noise naturally as we had different versions of the same image but in different resolutions. 
+
+We wanted to make sure, however, that the geometric properties were kept so we used a sharpen filter over the scaled image. We also
+tried to play around with some blurring/smoothening effects but they ended up mostly removing what we wanted to keep and these transformed
+images were now all the correct resolution and saved.
+
+
 <p align="center">
  <img src="images/wine_no_noise.PNG" width=300>
  <img src="images/wine_noise.PNG" width=300>
 </p>
 
-_Figure 7: Representation of Wine image after transformation._
+_Figure 7: Representation of a wine that was a high resolution, we then downscaled and sharpened to get our input data version._
 
 ## Results
 
