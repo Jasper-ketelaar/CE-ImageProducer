@@ -11,7 +11,7 @@
  
 ## Introduction
 
-The paper by A. Dhall et al. [1] presents a set of methods for leveraging information about the semantic hierarchy embedded in class labels. They argue that there has been limited work in using unconventional, external guidance other than traditional image-label pairs for training. They model the label-label and label-image interactions using order-preserving embeddings governed by both Euclidean and hyperbolic geometries, prevalent in natural language, and tailor them to hierarchical image classification and representation learning. They empirically validate the models on the hierarchical ETHEC dataset. Here is the image below provided by the authors describing the hierarchy of the dataset:
+The paper by A. Dhall et al. [1] presents a set of methods for leveraging information about the semantic hierarchy embedded in class labels. They argue that there has been limited work in using unconventional, external guidance other than traditional image-label pairs for training. They model the label-label and label-image interactions using order-preserving embeddings governed by both Euclidean and hyperbolic geometries, prevalent in natural language, and tailor them to hierarchical image classification and representation learning. They empirically validate the models on the hierarchical ETHEC dataset [2]. Here is the image below provided by the authors describing the hierarchy of the dataset:
 
 ![ETHEC Sample example](images/ethec_sample.PNG)
 _Figure 1: Sample images and their 4-level labels from the ETHEC dataset._
@@ -23,7 +23,7 @@ The paper has used different ways to formulate probability distributions to pass
 - Masked Per-level classifier
 - Hierarchical Softmax
 
-We aim to reproduce the results shown in the paper. First we tried to replicate the results from the ETHEC dataset as used in the paper and then we used a new dataset of wine bottles. Here is the image below describing the hierarchy of our wine dataset:
+We aim to reproduce the results shown in the paper by using the existing code (making some changes as required to fit our dataset). First we tried to replicate the results from the ETHEC dataset as used in the paper and then we used a new dataset of wine bottles. Here is the image below describing the hierarchy of our wine dataset:
 
 ![Wine Sample example](images/wine_sample.PNG)
 _Figure 2: Sample images and their 4-level labels from our wine dataset._
@@ -53,7 +53,21 @@ _Figure 6: Hierarchy of labels from the Wine dataset across 4 levels: country (b
 
 ## Methodology
 
-During dataset creation various transformations were employed.
+Initially, the existing code was used to replicate results reported in the paper. For executing experiments in different settings certain parameter were required to be modified. We executed experiment in the default parameter setting and some of important parameter worth mentioning are: batch_size = 64, learning rate = 0.00001, optimizer_method=adam, n_epochs=10, weight_strategy = inv, model = resnet50. Apart from these parameters, it had a parameter to choose the loss function (--loss). The options were like:
+- 'multi_label' for Hierarchy-agnostic baseline classifier (HAB)
+- 'multi_level' for Per-level Classifier
+- 'last_level' for Marginalization
+- 'masked_loss' for Masked Per-level classifier
+- 'softmax' for Hierarchical Softmax
+
+For the wine dataset, some changes were required to the existing code, json files had to be generated for train and test purposes, and image transformations were required to create some noise in the image and to make the dataset comparable in size to the ETHEC dataset used in the paper. Firstly, from the entire wine dataset only those data points were collected were there were images available and the parents in the hierarchy had some minimum number of children. Also, six different angles of wine bottle images were selected. After downloading the images as per the decided criteria, these images were transformed. Originally images were of different size, so these images were scaled up or down to 448x448 pixels, as per requirement. Then, the images were introduced to some gaussian noise and the changes can be seen in the images below:
+
+<p align="center">
+ <img src="images/wine_no_noise.PNG" width=300>
+ <img src="images/wine_noise.PNG" width=300>
+</p>
+
+_Figure 7: Representation of Wine image after transformation._
 
 ## Results
 
@@ -80,12 +94,14 @@ TODO: Mention something about our dataset results.
 
 
 
+Apart from the reproduced results we would like to conclude with a remark about the overall reproducibility of the paper. We realized that the available code repository didn't have a proper readme.md file nor there were proper comments in the code. This made it difficult to understand and manipulate the code. We also contacted the author of the paper regarding some issue while executing the order-embedding code, but did not get much information as the author was not very relevant with the code at the time. There were also some issues related to execution time and memory consumption. This limited our experiments to less number of trials and made it difficult to validate our results.
+
 ## References
 - \[1\]: Ankit Dhall, Anastasia Makarova, Octavian Ganea, Dario Pavllo, Michael Greeff, & Andreas Krause (2020). Hierarchical Image Classification using Entailment Cone Embedding. 
 
-- \[2\]: A. Dhall (2019). Learning Representations For Images With Hierarchical Labels.
+- \[2\]: A. Dhall (2019), Eth entomological collection (ethec) dataset  https://www.researchcollection.ethz.ch/handle/20.500.11850/365379 .
 
-- \[3\]: A. Dhall (2019), Eth entomological collection (ethec) dataset  https://www.researchcollection.ethz.ch/handle/20.500.11850/365379 .
+- \[3\]: A. Dhall (2019). Learning Representations For Images With Hierarchical Labels.
 
 ## Work Division
 
