@@ -1,12 +1,12 @@
 # CS4240 Reproducibility Project: Hierarchical Image Classification using Entailment Cone Embeddings
 
 <p align="center">
- <img src="images/classification_img.PNG" width=300>
+ <img src="images/classification_img.PNG" width=300/>
 </p>
 
 ## Authors
 
- - Jasper Ketelaar, [@student.tudelft.nl](@student.tudelft.nl), 4453050  
+ - Jasper Ketelaar, [j.ketelaar@student.tudelft.nl](j.ketelaar@student.tudelft.nl), 4453050  
  - Aayush Singh, [a.singh-28@student.tudelft.nl](a.singh-28@student.tudelft.nl), 5208122
  
 ## Introduction
@@ -41,9 +41,32 @@ _Figure 3: Information for each image in the Json files for the ETHEC dataset, a
 _Figure 4 (paper Figure 1): Hierarchy of labels from the ETHEC dataset across 4 levels: family (blue), sub-family (aqua), genus (brown) and species. For clarity, this visualisation depicts only the first 3 levels. The name of the family is displayed next to its sub-tree. Edges represent direct relations_
 
 
+[comment]: <> (
+--batch_size 32 --experiment_name gcw_exp_3 --experiment_dir gcw --image_dir F:\PycharmProjects\wineset-collector\transforms --n_epochs 4 --model resnet18 --loss last_level --set_mode train --level_weights 1.0 1.0 1.0 1.0 --lr 0.002
+--batch_size 32 --experiment_name gcw_exp_2 --experiment_dir gcw --image_dir F:\PycharmProjects\wineset-collector\transforms --n_epochs 4 --model resnet18 --loss hsoftmax --set_mode train --level_weights 1.0 1.0 1.0 1.0 --lr 0.002
+)
+
 - Wine Bottle Collection Dataset
 
-The wine dataset, used to reproduce the results, contains 38893 images with corresponding labels across 4 different levels. Each image is kept of the same dimension (448x448 pixels) as the original ETHEC dataset used in the paper. The split of the data is also maintained the same: train(80%), validation(10%) and test(10%) based solely on the images. Here is the image below describing the information mentioned for each image in the json files:
+The images of the bottles come from a large collection of images that are used to be displayed on the product page
+of a webshop. These images are taken from 12 angles to give the user a 360 degree experienece. They are also taken at an 
+extremely high resolution after which they are scaled down to different resolutions for zooming in and to make loading times
+faster when a high resolution is not required.
+
+We used this dataset for our reproduction because we knew that there were certain levels of hierarchy in the shape, label, the fonts used and more.
+To give an example, bottles from the entirety of France usually follow a certain
+label structure and even within specific regions there are guidelines that the wineries follow. Moreover, the wineries themselves will often
+produce recognizable features within their bottles to create a brand and have people be familiar with it. Most people know what a bottle of
+Moët looks like if they are even slightly familiar with wine because their branding has become very popular over the years.
+
+We figured that because these geometries essentially represent a bottle, this could be a very good dataset to work with a geometry based
+model in general and upon encountering the paper we actually realized that this could yield fantastic results as it, in essence but obviously more detail,
+researched the topic and came up with a multitude of models to be used for data such as ours.
+
+The wine dataset, used to reproduce the results, contains 38893 images with corresponding labels across 4 different levels. 
+Each image is kept of the same dimension (448x448 pixels) as the original ETHEC dataset used in the paper. 
+The split of the data is also maintained the same: train(80%), validation(10%) and test(10%) based solely on the images. 
+Here is the image below describing the information mentioned for each image in the json files:
 
 ![Wine Json example](images/wine_json.PNG)
 _Figure 5: Information for each image in the Json files for the Wine dataset._
