@@ -6,3 +6,6 @@ venv/
 feeds/
 wine_images/
 *dump.json
+images/
+originals/
+transforms/
