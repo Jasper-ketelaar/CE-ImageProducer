@@ -61,7 +61,7 @@ Moët looks like if they are even slightly familiar with wine because their bran
 
 A single bottle of Moët if your interest does not lie in wines: 
 <p align="center">
- <img src="images/moet.jpg" width=/>
+ <img src="images/moet.jpg" width=300/>
 </p>
 _Figure 5: A bottle of a popular brand that produces champagnes_
 
