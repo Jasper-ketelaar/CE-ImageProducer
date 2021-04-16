@@ -60,9 +60,10 @@ produce recognizable features within their bottles to create a brand and have pe
 Moët looks like if they are even slightly familiar with wine because their branding has become very popular over the years.
 
 A single bottle of Moët if your interest does not lie in wines: 
-<img src="images/moet.jpg" width="300">
+<p align="center">
+ <img src="images/moet.jpg" width="300"/>
+</p>
 _Figure 5: A bottle of a popular brand that produces champagnes_
-<br/>
 
 Here is a line-up of a few of their bottles to show case what we meant by similarity and hierarchy:
 ![Moet Collection](images/moet-collection.jpeg)
