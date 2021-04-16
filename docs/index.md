@@ -37,7 +37,7 @@ The ETHEC dataset used in the paper contains 47,978 images of the “order” Le
 ![ETHEC Json example](images/ethec_json.PNG)
 _Figure 3: Information for each image in the Json files for the ETHEC dataset, as given by the authors of the paper._
 
-![ETHEC hierarchy example](images/ethec_hierarchy_img.PNG)
+![ETHEC hierarchy example](images/ethec_hierarchy_img.png)
 _Figure 4 (paper Figure 1): Hierarchy of labels from the ETHEC dataset across 4 levels: family (blue), sub-family (aqua), genus (brown) and species. For clarity, this visualisation depicts only the first 3 levels. The name of the family is displayed next to its sub-tree. Edges represent direct relations_
 
 
@@ -48,7 +48,7 @@ The wine dataset, used to reproduce the results, contains 38893 images with corr
 ![Wine Json example](images/wine_json.PNG)
 _Figure 5: Information for each image in the Json files for the Wine dataset._
 
-![ETHEC hierarchy example](images/hierarchy_img.PNG)
+![ETHEC hierarchy example](images/hierarchy_img.png)
 _Figure 6: Hierarchy of labels from the Wine dataset across 4 levels: country (blue), region (aqua), winery (brown) and wine. For clarity, this visualisation depicts only the first 3 levels. The name of the country is displayed next to its sub-tree. Edges represent direct relations_
 
 ## Methodology
@@ -84,6 +84,8 @@ TODO: Mention something about our dataset results.
 - \[1\]: Ankit Dhall, Anastasia Makarova, Octavian Ganea, Dario Pavllo, Michael Greeff, & Andreas Krause (2020). Hierarchical Image Classification using Entailment Cone Embedding. 
 
 - \[2\]: A. Dhall (2019). Learning Representations For Images With Hierarchical Labels.
+
+- \[3\]: A. Dhall (2019), Eth entomological collection (ethec) dataset  https://www.researchcollection.ethz.ch/handle/20.500.11850/365379 .
 
 ## Work Division
 
