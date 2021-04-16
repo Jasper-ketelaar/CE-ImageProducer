@@ -104,18 +104,18 @@ The results presented below are our effort to reproduce the paper. The original 
 | **MC (Paper)** | 0.9223 | 0.9887 | 0.9758 | 0.9273 | 0.7972 |
 | **MC (Our Result)** | 0.6061 | 0.6807 | 0.6749 | 0.6136 | 0.4801 |
 | Wine dataset | --- | --- | --- | --- | --- |
-| **HS** |  |  |  |  |  |
-| **MC** |  |  |  |  |  |
+| **HS** | 0.8750 | 0.9519 | 0.8770 | 0.8782 | 0.7926 |
+| **MC** | 0.8435 | 0.9443 | 0.8765 | 0.8598 | 0.6932 |
 
-_Table 1: Results obtained from experiments._
+_Table 1: Results obtained from experiments in different settings._
 
 Looking at the results for the ETHEC dataset, we concluded that the setting in which we ran the experiments were not appropriate. We believe the low scores in comparison to those in paper is mainly due limited number of epochs used in our experiments. Due to high execution time and memory consumption, we had to limit the number of epochs to 10.
 
-TODO: Mention something about our dataset results.
+However, the experiments showed promising results for the wine dataset. The scores achieved for Hierarchical Softmax and Marginalization classifier are according to the expectation. This is because Marginalization Classifier uses a bottom-up approach and outputs a probability distribution over the final level in the hierarchy. And it would not be as effective in every case due dependence on last level. For Hierarchical Softmax model, it predicts logits for every node in the hierarchy. We believe it gives a better score as the cross-entropy loss is computed only over the leaves but since the distribution is calculated using internal nodes, all levels are optimized implicitly. 
 
 ## Conclusion
 
-
+Overall, this report provided us results that justified the claim made in the paper. Although we were not able to fully verify the results with the ETHEC dataset, we utilized our wine dataset and got results that justified that semantic hierarchy embedded in class labels could help in image classification. 
 
 Apart from the reproduced results we would like to conclude with a remark about the overall reproducibility of the paper. We realized that the available code repository didn't have a proper readme.md file nor there were proper comments in the code. This made it difficult to understand and manipulate the code. We also contacted the author of the paper regarding some issue while executing the order-embedding code, but did not get much information as the author was not very relevant with the code at the time. There were also some issues related to execution time and memory consumption. This limited our experiments to less number of trials and made it difficult to validate our results.
 
@@ -128,12 +128,7 @@ Apart from the reproduced results we would like to conclude with a remark about 
 
 ## Work Division
 
-During the entire course of this project, we worked in a collaborative manner. Initially, we had discussions regarding which paper to reproduce and what dataset should we utilize. Then we focused on understanding the original paper and had discussions among ourselves and with the teaching assistant. Below the task division between the group members is shown:
+During the entire course of this project, we worked in a collaborative manner. Initially, we had discussions regarding which paper to reproduce and what dataset should we utilize. Then we focused on understanding the original paper and had discussions among ourselves and with the teaching assistant. We individually tried to get a better understanding of the code and collaborated for the experiment, to share analysis and insights. Also, both of us were equally involved in creation of the blog, poster and proof-reading.
 
-### Jasper Ketelaar
-- First Point
-
-### Aayush Singh
-- First Point
 
 
